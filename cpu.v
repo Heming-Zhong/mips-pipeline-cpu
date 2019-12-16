@@ -565,18 +565,18 @@ module cpu(
 
     reg [1:0] forward_a,forward_b;
     always @( * ) begin 
-        if((regwre_s4 == 1 && wrctr_s4 == 1) && (writereg_s4 == rs_s3)) begin
+        if((regwre_s4 == 1 && wrctr_s4 == 1) && (writereg_s4 == rs_s3) && (writereg_s4 != 0)) begin
             forward_a <= 2'd1;
         end
-        else if((regwre_s5 == 1 && wrctr_s5 == 1) && (writereg_s5 == rs_s3)) begin
+        else if((regwre_s5 == 1 && wrctr_s5 == 1) && (writereg_s5 == rs_s3) && (writereg_s5 != 0)) begin
             forward_a <= 2'd2;
         end
         else forward_a <= 2'd0;
 
-        if((regwre_s4 == 1 && wrctr_s4 == 1) && (writereg_s4 == rt_s3)) begin
+        if((regwre_s4 == 1 && wrctr_s4 == 1) && (writereg_s4 == rt_s3) && (writereg_s4 != 0)) begin
             forward_b <= 2'd1;
         end    
-        else if((regwre_s5 == 1 && wrctr_s5 == 1) && (writereg_s5 == rt_s3)) begin
+        else if((regwre_s5 == 1 && wrctr_s5 == 1) && (writereg_s5 == rt_s3) && (writereg_s5 != 0)) begin
             forward_b <= 2'd2;
         end
         else forward_b <= 2'd0;
