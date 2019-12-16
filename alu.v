@@ -8,6 +8,13 @@ module alu(
 	output wire zero, 
 	output reg wrctr
 );
+	//control signal wrctr is for overflow detection and instruction movn
+	//whether register memory can be written is both decided by:
+	//	signal regwre;
+	//	signal wrctr;
+	//because alu result for arithmetic with overflow should not be written,
+	//also when executing instruction movn and the value of rt is zero, the value of rs should not be written
+	//these conditions can not be found only by signal regwre, who is decided in stage ID, from control unit.
 	assign zero = (res==0)?1:0;
 	always @( * ) begin
 		//default
@@ -20,8 +27,8 @@ module alu(
 		end
 		3'b001: begin
 			res <= a - b;
-			if(a[31]==0&&b[31]==0&&res[31]==1) wrctr = 0;
-			else if(a[31]==1&&b[31]==1&&res[31]==0) wrctr = 0;
+			if(a[31]==0&&b[31]==1&&res[31]==1) wrctr = 0;
+			else if(a[31]==1&&b[31]==0&&res[31]==0) wrctr = 0;
 		end
 		3'b010: begin
 			res <= b << a;
