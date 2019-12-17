@@ -38,7 +38,7 @@ module cpu(
         flush_s1 <= 0;
         flush_s2 <= 0;
         flush_s3 <= 0;
-        if(pcsrc == 2'b01 || pcsrc == 2'b10 || pcsrc == 2'b11 || pcwre_s4 == 1) begin
+        if(pcsrc == 2'b01 || pcsrc == 2'b10 || pcsrc == 2'b11) begin
             flush_s1 <= 1;
             flush_s2 <= 1;
             flush_s3 <= 1;
@@ -62,7 +62,7 @@ module cpu(
     wire [31:0] pc4;
     assign pc4 = pc + 4;
     always @(posedge clk) begin
-        if(pcwre_s5) begin
+        if(ir[31:26] == 6'b111111 && flush_s1 == 0) begin
             pc <= pc;
         end
         else if(stall_s1_s2) begin
@@ -101,7 +101,6 @@ module cpu(
     //instruction memory
     wire [31:0] ir,ir_s2;
     im im_1(
-        .readen(pcwre_s5),
 		.pc(pc),
 		.ir(ir)
     );
@@ -217,7 +216,7 @@ module cpu(
     wire [31:0] pc4_s3;
     midreg #(.N(32))midreg_pc4_s2(
         .clk(clk),
-        .clear(1'b0),
+        .clear(flush_s2),
         .hold(stall_s1_s2),
         .in(pc4_s2),
         .out(pc4_s3)
@@ -589,13 +588,6 @@ module cpu(
         else forward_b <= 2'd0;
     end
 
-
-    //
-    always @( * ) begin
-        if(pcwre_s5 == 1) begin
-            pc = 32'h000000c8;
-        end
-    end
 
     //=== load-use data hazard ===
     always @( * ) begin 
