@@ -28,6 +28,8 @@ module cpu(
     wire jal_s5;
     wire wrctr_s5;
     wire [31:0] pc4_s5;
+    wire pcwre_s5;
+    
     //flush control
     //static branch prediction 
     //always stall when branch occurs
@@ -99,6 +101,7 @@ module cpu(
     //instruction memory
     wire [31:0] ir,ir_s2;
     im im_1(
+        .readen(pcwre_s5),
 		.pc(pc),
 		.ir(ir)
     );
@@ -309,8 +312,8 @@ module cpu(
     wire Wr_s4;
     midreg #(.N(1))midreg_pcwre_s3(
         .clk(clk),
-        .clear(flush_s3),
-        .hold(1'b0),
+        .clear(1'b0),
+        .hold(flush_s3),
         .in(pcwre_s3),
         .out(pcwre_s4)
     );
@@ -549,12 +552,11 @@ module cpu(
 		.out(pc4_s5)
 	);
 
-    wire pcwre_s5;
     //pass pcwre to stage 5 -- judging halt or not
     midreg #(.N(1))midreg_pcwre_s4(
         .clk(clk),
         .clear(1'b0),
-        .hold(1'b0),
+        .hold(pcwre_s5),
         .in(pcwre_s4),
         .out(pcwre_s5)
     );
@@ -563,6 +565,11 @@ module cpu(
 
     assign regwr_data_s5 = (dbdatasrc_s5)?readata_s5:alures_s5;
 
+
+    //=== forwarding ===
+    //2'd1: MEM to EXE
+    //2'd2: WB to EXE
+    //=== forwarding ===
     reg [1:0] forward_a,forward_b;
     always @( * ) begin 
         if((regwre_s4 == 1 && wrctr_s4 == 1) && (writereg_s4 == rs_s3) && (writereg_s4 != 0)) begin
@@ -582,13 +589,15 @@ module cpu(
         else forward_b <= 2'd0;
     end
 
+
+    //
     always @( * ) begin
         if(pcwre_s5 == 1) begin
             pc = 32'h000000c8;
         end
     end
 
-    //load-use data hazard
+    //=== load-use data hazard ===
     always @( * ) begin 
         if(Rd_s3 == 1 && (rt == rt_s3 || rs == rt_s3)) begin 
             stall_s1_s2 <= 1; // a stall
